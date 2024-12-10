@@ -1,7 +1,6 @@
 from openai import OpenAI
 import Game_logic
 import time
-import ollama_test as ot
 def get_ai_completion(client, messages):
     completion = client.chat.completions.create(
         model="gpt-4o",

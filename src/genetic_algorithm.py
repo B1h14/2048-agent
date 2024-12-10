@@ -8,7 +8,6 @@ import torch
 
 import Brain
 import Game_logic
-import Layout
 
 
 def initialize_population(population_size: int) -> List[Brain.NN]:
@@ -68,8 +67,8 @@ def run_model(model: Brain.NN) -> float:
     """
     board = Game_logic.Board()
     while not board.game_over:
-        use_ai(board, 4, model)
-    return board.score + max_in_board(board.B)**2
+        Brain.use_ai(board, 4, model)
+    return board.score + max_in_board(board.current_board_state)**2
 
 
 def max_in_board(board_list: List[List[int]]) -> int:
@@ -163,8 +162,17 @@ def display_ai(model: Brain.NN) -> None:
                     board = Game_logic.Board()
         
         screen.fill(Layout.white)
-        Layout.draw_Board(board.B, board.size, screen, font, board.score)
+        Layout.draw_Board(board.current_board_state, board.size, screen, font, board.score)
         pygame.display.flip()
 
     pygame.quit()
     sys.exit()
+
+population_size = 100
+mutation_rate = 0.1
+num_generations = 10
+number_of_games = 10
+
+final_population = train_genetic_algorithm(population_size, mutation_rate, num_generations, number_of_games)
+best_model = final_population[0]
+display_ai(best_model)

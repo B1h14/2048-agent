@@ -33,7 +33,7 @@ def draw_Board(Board_list,Board_size,screen,font,score):
     text_surface = font.render("score =" + str(score), True, black)
     text_rect = text_surface.get_rect(center=( 100,100))
     screen.blit(text_surface, text_rect)
-def define_key_actions(Board,Event,Model):
+def set_key_actions(Board,Event,Model):
     for event in Event.get():
         if event.type == pygame.QUIT:  # Handle window close
             running = False

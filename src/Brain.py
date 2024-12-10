@@ -108,6 +108,6 @@ def use_ai(board, board_size: int, model: NN) -> None:
         board_size: Size of the board (width/height)
         model: Neural network model to use for prediction
     """
-    board_tensor = convert_to_input(board.B, board_size)
+    board_tensor = convert_to_input(board.current_board_state, board_size)
     move_probabilities = model.forward(board_tensor)
     determine_action(board, move_probabilities)

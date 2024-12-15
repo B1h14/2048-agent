@@ -1,7 +1,7 @@
 from typing import List
 import torch
 import torch.nn as nn
-
+import math
 
 class NN(nn.Module):
     """Neural network model for 2048 game AI.
@@ -20,6 +20,7 @@ class NN(nn.Module):
         self.fc3 = nn.Linear(10, 4)
         self.softmax = nn.Softmax(dim=0)
         self.sigmoid = nn.Sigmoid()
+
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the network.
@@ -35,7 +36,15 @@ class NN(nn.Module):
         x = self.sigmoid(self.fc3(x))
         x = self.softmax(x)
         return x
-
+    def train(self,x,y, learning_rate= 0.01):
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
+        optimizer.zero_grad()
+        output = self.forward(x)
+        loss = criterion(output, y)
+        loss.backward()
+        optimizer.step()
+        
 
 def convert_to_input(board_list: List[List[int]], board_size: int) -> torch.Tensor:
     """Convert 2D board state to 1D input tensor.
@@ -47,9 +56,20 @@ def convert_to_input(board_list: List[List[int]], board_size: int) -> torch.Tens
     Returns:
         Flattened tensor representation of the board
     """
-    flattened = [board_list[i // board_size][i % board_size] 
+    flattened = [ math.log2(board_list[i // board_size][i % board_size]) if board_list[i // board_size][i % board_size] != 0 else board_list[i // board_size][i % board_size] 
                  for i in range(board_size ** 2)]
     return torch.tensor(flattened, dtype=torch.float32)
+def convert_move_to_index(move: str) -> int:
+    """Convert move string to index.
+    
+    Args:
+        move: String representing the move (up, down, left, right)
+        
+    Returns:
+        Integer representing the index of the move
+    """
+    moves = ["up", "down", "left", "right"]
+    return moves.index(move)
 
 
 def sort_args(values: List[float]) -> List[int]:
@@ -66,7 +86,7 @@ def sort_args(values: List[float]) -> List[int]:
     return [idx for _, idx in indexed_values]
 
 
-def determine_action(board, model_output: List[float]) -> None:
+def determine_action(board, model_output) -> None:
     """Determine and perform the next action based on model output.
     
     Args:
@@ -79,6 +99,7 @@ def determine_action(board, model_output: List[float]) -> None:
             break
         if action == sorted_actions[-1]:
             board.end_game()
+
 
 
 def perform_action(action: int, board) -> bool:
@@ -98,7 +119,15 @@ def perform_action(action: int, board) -> bool:
         3: board.right
     }
     return actions.get(action, lambda: True)()
-
+def perform_random_action(board , probabilities) :
+    action = torch.multinomial(probabilities, 1).item()
+    actions = {
+        0: board.down,
+        1: board.up,
+        2: board.left,
+        3: board.right
+    }
+    return actions.get(action, lambda: True)()
 
 def use_ai(board, board_size: int, model: NN) -> None:
     """Use AI model to make a move on the board.
@@ -109,5 +138,5 @@ def use_ai(board, board_size: int, model: NN) -> None:
         model: Neural network model to use for prediction
     """
     board_tensor = convert_to_input(board.current_board_state, board_size)
-    move_probabilities = model.forward(board_tensor)
+    move_probabilities = model.forward(board_tensor).detach().numpy()
     determine_action(board, move_probabilities)

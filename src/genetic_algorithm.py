@@ -8,7 +8,7 @@ import torch
 
 import Brain
 import Game_logic
-
+import Layout
 
 def initialize_population(population_size: int) -> List[Brain.NN]:
     """Initialize a population of neural networks.
@@ -157,7 +157,7 @@ def display_ai(model: Brain.NN) -> None:
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    use_ai(board, board.size, model)
+                    Brain.use_ai(board, board.size, model)
                 if event.key == pygame.K_r:
                     board = Game_logic.Board()
         
@@ -168,11 +168,3 @@ def display_ai(model: Brain.NN) -> None:
     pygame.quit()
     sys.exit()
 
-population_size = 100
-mutation_rate = 0.1
-num_generations = 10
-number_of_games = 10
-
-final_population = train_genetic_algorithm(population_size, mutation_rate, num_generations, number_of_games)
-best_model = final_population[0]
-display_ai(best_model)

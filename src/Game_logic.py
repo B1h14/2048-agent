@@ -1,6 +1,6 @@
 import random as rd
 
-P = 0.25
+P = 0.01
 def Random_Spawn_Position(Board_Size):
     l = rd.randint(0,15)
     i , j = l//Board_Size , l%Board_Size
@@ -197,6 +197,26 @@ class Board():
         return possible_actions
     def go_back(self):
         self.current_board_state = copy_Board(self.Board_states.pop(-1))
+
+    def move(self, move_str: str) -> bool:
+        """Perform a move on the board based on the input string.
+        
+        Args:
+            move_str: String representing the move ('up', 'down', 'left', 'right')
+            
+        Returns:
+            bool: True if the move was valid and performed, False otherwise
+        """
+        if move_str == "up":
+            return self.up()
+        elif move_str == "down":
+            return self.down()
+        elif move_str == "left":
+            return self.left()
+        elif move_str == "right":
+            return self.right()
+        return False
+
 def perform_Action(move,Board) :
     if move == "up" :
         return Board.up()

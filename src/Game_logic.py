@@ -1,5 +1,5 @@
 import random as rd
-
+from typing import List, Optional
 P = 0.01
 def Random_Spawn_Position(Board_Size):
     l = rd.randint(0,15)
@@ -197,7 +197,8 @@ class Board():
         return possible_actions
     def go_back(self):
         self.current_board_state = copy_Board(self.Board_states.pop(-1))
-
+    def set_state(self, state):
+        self.current_board_state = copy_Board(state)
     def move(self, move_str: str) -> bool:
         """Perform a move on the board based on the input string.
         
@@ -228,3 +229,13 @@ def perform_Action(move,Board) :
         return Board.right()
     else :
         return Board.end_game()  
+def max_in_board(board_list: List[List[int]]) -> int:
+    """Find the maximum value in the game board.
+    
+    Args:
+        board_list: 2D list representing the game board
+        
+    Returns:
+        Maximum value found
+    """
+    return max(max(row) for row in board_list)

@@ -80,6 +80,19 @@ def convert_to_input(board_list: List[List[int]], board_size: int) -> torch.Tens
     flattened = [ math.log2(board_list[i // board_size][i % board_size]) if board_list[i // board_size][i % board_size] != 0 else board_list[i // board_size][i % board_size] 
                  for i in range(board_size ** 2)]
     return torch.tensor(flattened, dtype=torch.float32)
+def convert_to_input_2D(board_list: List[List[int]], board_size: int) -> torch.Tensor:
+    """Convert 2D board state to 1D input tensor.
+    
+    Args:
+        board_list: 2D list representing the game board
+        board_size: Size of the board (width/height)
+        
+    Returns:
+        Flattened tensor representation of the board
+    """
+    flattened = [[ math.log2(board_list[i // board_size][i % board_size]) if board_list[i // board_size][i % board_size] != 0 else board_list[i // board_size][i % board_size] ]
+                 for i in range(board_size ** 2)]
+    return torch.tensor(flattened, dtype=torch.float32).view(1, 1, board_size, board_size)
 
 def convert_move_to_index(move: str) -> int:
     """Convert move string to index.

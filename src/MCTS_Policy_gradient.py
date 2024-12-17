@@ -52,22 +52,32 @@ def evaluate_board(board,a=10,b=1,c=1):
                 zero_count += 1
     score = (
     math.log2(max_in_board(board)) *(a*(board[0][0] == max_in_board(board)) )+
-    b*zero_count +
-    c*monotomy(board)
-    #- 0.3*smoothness(board)
+    3*zero_count +
+    2*c*monotomy(board)
+    - 0.1*smoothness(board)
     )
     return score
 # Neural Network for predicting move probabilities
 class PolicyNetwork(nn.Module):
     def __init__(self, input_size=16, output_size=4):
         super(PolicyNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, 128)
-        self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 128)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=2, stride=1)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=2, stride=1)
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=2, stride=1)
+        # Define a fully connected layer
+        self.fc1 = nn.Linear(64 * 1 * 1, 64)
+        self.fc2 = nn.Linear(64, 64)
+        self.fc3 = nn.Linear(64, 64)
 
-        self.fc4 = nn.Linear(128, output_size)
+        self.fc4 = nn.Linear(64, output_size)
 
     def forward(self, x):
+        # Apply convolutional layers followed by ReLU activations
+        x = torch.relu(self.conv1(x))
+        x = torch.relu(self.conv2(x))
+        x = torch.relu(self.conv3(x))
+        # Flatten the tensor
+        x = x.view(x.size(0), -1)
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         x = torch.relu(self.fc3(x))
@@ -79,7 +89,7 @@ class PolicyNetwork(nn.Module):
         self.load_state_dict(torch.load(filename))
 
     def optimize(self,board_input,reward,chosen_move=None,alpha=0.01,gamma=0.9):
-        output = self.forward(board_input)
+        output = self.forward(board_input).squeeze()
         torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=1.0)
         if chosen_move is not None:
             chosen_move_index = Brain.convert_move_to_index(chosen_move)
@@ -92,10 +102,10 @@ class PolicyNetwork(nn.Module):
     def learn(self ,learning_rate=0.001,gamma=0.9,evaluation_function=evaluate_board, visualize=False,board_size=4): 
         board = Game_logic.Board(board_size)
         moves_count = 0
-        while not board.game_over:
-            board_tensor = Brain.convert_to_input(board.current_board_state, board_size)
+        while not board.get_possible_actions() == []: 
+            board_tensor = Brain.convert_to_input_2D(board.current_board_state, board_size)
             with torch.no_grad():
-                move_probabilities = self.forward(board_tensor)
+                move_probabilities = self.forward(board_tensor).squeeze()
             move = torch.multinomial(move_probabilities, 1).item()
             moves = ["up", "down", "left", "right"]
             move = moves[move]
@@ -104,7 +114,7 @@ class PolicyNetwork(nn.Module):
                 reward = evaluation_function(board.current_board_state)
                 moves_count += 1
             else:
-                reward = -1*abs(evaluate_board(board.current_board_state)) +3
+                reward = -1
             self.optimize(board_tensor,reward,move,learning_rate,gamma)
             
             if visualize:
@@ -122,8 +132,8 @@ class PolicyNetwork(nn.Module):
         for game in range(num_games):
             self.learn(learning_rate,gamma,evaluation_function, visualize,board_size)
 MC = PolicyNetwork()
-MC.learn_from_games(10,learning_rate=0.001,gamma=0.9,evaluation_function=evaluate_board, visualize=True,board_size=4)
-        
+MC.learn_from_games(100,learning_rate=0.01,gamma=0.9,evaluation_function=evaluate_board, visualize=True,board_size=4)
+
 
 
 
